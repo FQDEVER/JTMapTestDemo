@@ -150,86 +150,87 @@
     return path;
 }
 
-#pragma mark - 构造gradientLayer
-- (void)initGradientLayerWithPoints:(CGPoint *)points Count:(NSUInteger)count{
-    if(count<1){
-        return;
-    }
-    self.gradientLayer = [[CALayer alloc] init];
-    for(int i=0;i<count-1;i++){
-        @autoreleasepool {
-            CGPoint point1 = points[i];
-            CGPoint point2 = points[i+1];
-            
-            double xDiff = point2.x-point1.x; //正向差距多少
-            double yDiff = point2.y-point1.y; //y轴正向差距多少.
-            CGPoint startPoint,endPoint;
-            double offset = 0.;
-            
-            CAGradientLayer *gradientLayer = [[CAGradientLayer alloc] init];
-            //相邻两个最标点 构造一个渐变图层
-            [gradientLayer setFrame:CGRectMake(MIN(point1.x, point2.x)-3, MIN(point1.y, point2.y)-3, fabs(xDiff)+6, fabs(yDiff)+6)];
-            
-            //渐变方向
-            if(xDiff>0.){
-                if(yDiff>0.){
-                    if(xDiff>yDiff){
-                        offset = yDiff/xDiff;
+        #pragma mark - 构造gradientLayer
+        - (void)initGradientLayerWithPoints:(CGPoint *)points Count:(NSUInteger)count{
+            if(count<1){
+                return;
+            }
+            self.gradientLayer = [[CALayer alloc] init];
+            for(int i=0;i<count-1;i++){
+                @autoreleasepool {
+                    CGPoint point1 = points[i];
+                    CGPoint point2 = points[i+1];
+                    
+                    double xDiff = point2.x-point1.x; //正向差距多少
+                    double yDiff = point2.y-point1.y; //y轴正向差距多少.
+                    CGPoint startPoint,endPoint;
+                    double offset = 0.;
+                    
+                    CAGradientLayer *gradientLayer = [[CAGradientLayer alloc] init];
+                    //相邻两个最标点 构造一个渐变图层
+                    [gradientLayer setFrame:CGRectMake(MIN(point1.x, point2.x)-3, MIN(point1.y, point2.y)-3, fabs(xDiff)+6, fabs(yDiff)+6)];
+                    
+                    //渐变方向
+                    if (xDiff > 0 && yDiff > 0) {
+                        if (xDiff >= yDiff) {
+                            startPoint = CGPointMake(0, 0);
+                            endPoint =  CGPointMake(1, yDiff / xDiff);
+                        }else{
+                            offset = xDiff/yDiff;
+                            startPoint = CGPointMake(0, 0);
+                            endPoint =  CGPointMake(xDiff / yDiff, 1);
+                        }
+                    }else if (xDiff > 0 && yDiff == 0){
                         startPoint = CGPointMake(0, 0);
-                        endPoint = CGPointMake(offset, 1);
-                    }else{
-                        offset = xDiff/yDiff;
+                        endPoint = CGPointMake(1, 0);
+                    }else if (xDiff < 0 && yDiff == 0){
+                        startPoint = CGPointMake(1, 0);
+                        endPoint = CGPointMake(0, 0);
+                    }else if (xDiff == 0 && yDiff > 0){
                         startPoint = CGPointMake(0, 0);
-                        endPoint = CGPointMake(1, offset);
-                    }
-                }else{
-                    if(xDiff>fabs(yDiff)){
-                        offset = fabs(yDiff)/xDiff;
+                        endPoint = CGPointMake(0, 1);
+                    }else if (xDiff == 0 && yDiff < 0){
                         startPoint = CGPointMake(0, 1);
-                        endPoint = CGPointMake(1, offset);
+                        endPoint = CGPointMake(0, 0);
+                    }else if (xDiff > 0 && yDiff < 0){
+                        if (fabs(xDiff) >= fabs(yDiff)) {
+                            startPoint = CGPointMake(0, fabs(yDiff / xDiff));
+                            endPoint =  CGPointMake(1, 0);
+                        }else{
+                            startPoint = CGPointMake(0, 1);
+                            endPoint = CGPointMake(fabs(xDiff/yDiff), 0);
+                        }
+                    }else if (xDiff < 0 && yDiff < 0){
+                        if (fabs(xDiff) >= fabs(yDiff)){
+                            startPoint = CGPointMake(1, 1);
+                            endPoint = CGPointMake(0, 1 - fabs(yDiff) / fabs(xDiff));
+                        }else{
+                            startPoint = CGPointMake(fabs(xDiff)/fabs(yDiff), 1);
+                            endPoint = CGPointMake(0, 0);
+                        }
                     }else{
-                        offset = xDiff/fabs(yDiff);
-                        startPoint = CGPointMake(1, 0);
-                        endPoint = CGPointMake(0, offset);
+                        if(fabs(xDiff) >= fabs(yDiff)){
+                            startPoint = CGPointMake(1, 0);
+                            endPoint = CGPointMake(0, fabs(yDiff) / fabs(xDiff));
+                        }else{
+                            startPoint = CGPointMake(fabs(xDiff)/fabs(yDiff), 0);
+                            endPoint = CGPointMake(0, 1);
+                        }
                     }
-                }
-            }else{
-                if(yDiff>0.){
-                    if(fabs(xDiff)>yDiff){
-                        offset = yDiff/fabs(xDiff);
-                        startPoint = CGPointMake(0, 1);
-                        endPoint = CGPointMake(offset, 0);
-                    }else{
-                        offset = fabs(xDiff)/yDiff;
-                        startPoint = CGPointMake(1, 0);
-                        endPoint = CGPointMake(1-offset, 1);
-                    }
-                }else{
-                    if(fabs(xDiff)>fabs(yDiff)){
-                        offset = fabs(yDiff)/fabs(xDiff);
-                        startPoint = CGPointMake(1, 1);
-                        endPoint = CGPointMake(1-offset, 0);
-                    }else{
-                        offset = fabs(xDiff)/fabs(yDiff);
-                        startPoint = CGPointMake(1, 1);
-                        endPoint = CGPointMake(0, 1-offset);
-                    }
+                    gradientLayer.cornerRadius = 6;
+                    gradientLayer.startPoint = startPoint;
+                    gradientLayer.endPoint = endPoint;
+                    
+                    gradientLayer.colors = @[[self.gradientColors objectAtIndex:i],
+                                             [self.gradientColors objectAtIndex:i+1]];
+                    //调试
+
+                    [self.gradientLayer insertSublayer:gradientLayer atIndex:0];
                 }
             }
-            gradientLayer.cornerRadius = 6;
-            gradientLayer.startPoint = startPoint;
-            gradientLayer.endPoint = endPoint;
-            
-            gradientLayer.colors = @[[self.gradientColors objectAtIndex:i],
-                                     [self.gradientColors objectAtIndex:i+1]];
-            //调试
-
-            [self.gradientLayer insertSublayer:gradientLayer atIndex:0];
+            [self.gradientLayer setMask:self.shapeLayer];
+            [self.mapView.layer insertSublayer:self.gradientLayer atIndex:1];
         }
-    }
-    [self.gradientLayer setMask:self.shapeLayer];
-    [self.mapView.layer insertSublayer:self.gradientLayer atIndex:1];
-}
 
 //获取颜色值
 //- (void) velocity:(float*)velocity ToHue:(float**)_hue count:(int)count{
@@ -260,57 +261,57 @@
 
 #pragma mark - Interface
 
-- (void)execute
-{
-    [self clear];
-    
-    [self.mapView addOverlay:self.polyline];
-    
-    /* 使轨迹在地图可视范围内. */
-    [self.mapView setVisibleMapRect:self.polyline.boundingMapRect edgePadding:self.edgeInsets animated:NO];
-    
-    self.displayLink = [CADisplayLink displayLinkWithTarget:self
+        - (void)execute
+        {
+            [self clear];
+            
+            [self.mapView addOverlay:self.polyline];
+            
+            /* 使轨迹在地图可视范围内. */
+            [self.mapView setVisibleMapRect:self.polyline.boundingMapRect edgePadding:self.edgeInsets animated:NO];
+            
+            self.displayLink = [CADisplayLink displayLinkWithTarget:self
 
-                                                   selector:@selector(updateDisplay)];
+                                                           selector:@selector(updateDisplay)];
 
-    [self.displayLink addToRunLoop:[NSRunLoop currentRunLoop]
+            [self.displayLink addToRunLoop:[NSRunLoop currentRunLoop]
 
-                           forMode:NSDefaultRunLoopMode];
-    self.timeCount = 0;
-    
-    
-    /* 构建path. */
-    CGPoint *points = [self pointsForCoordinates:_coordinates count:_count];
-    CGPathRef path = [self pathForPoints:points count:_count];
-    self.shapeLayer.path = path;
-    [self.mapView.layer insertSublayer:self.shapeLayer atIndex:1];
+                                   forMode:NSDefaultRunLoopMode];
+            self.timeCount = 0;
+            
+            
+            /* 构建path. */
+            CGPoint *points = [self pointsForCoordinates:_coordinates count:_count];
+            CGPathRef path = [self pathForPoints:points count:_count];
+            self.shapeLayer.path = path;
+            [self.mapView.layer insertSublayer:self.shapeLayer atIndex:1];
 
-    self.gradientColors = @[(id)UIColor.redColor.CGColor,(id)UIColor.orangeColor.CGColor,(id)UIColor.blueColor.CGColor,(id)UIColor.greenColor.CGColor];
-    [self initGradientLayerWithPoints:points Count:_count];
+            self.gradientColors = @[(id)UIColor.redColor.CGColor,(id)UIColor.orangeColor.CGColor,(id)UIColor.blueColor.CGColor,(id)UIColor.greenColor.CGColor];
+            [self initGradientLayerWithPoints:points Count:_count];
 
-    [self.mapView addAnnotation:self.annotation];
+            [self.mapView addAnnotation:self.annotation];
 
-    MAAnnotationView *annotationView = [self.mapView viewForAnnotation:self.annotation];
-    annotationView.image = [UIImage imageNamed:@"ios_trace_detail_trace_dot"];
-    self.annotationView = annotationView;
+            MAAnnotationView *annotationView = [self.mapView viewForAnnotation:self.annotation];
+            annotationView.image = [UIImage imageNamed:@"icon24／sport_details_route_head"];
+            self.annotationView = annotationView;
 
-    if (annotationView != nil)
-    {
-        /* Annotation animation. */
-        CAAnimation *annotationAnimation = [self constructAnnotationAnimationWithPath:path];
-        [annotationView.layer addAnimation:annotationAnimation forKey:@"annotation"];
+            if (annotationView != nil)
+            {
+                /* Annotation animation. */
+                CAAnimation *annotationAnimation = [self constructAnnotationAnimationWithPath:path];
+                [annotationView.layer addAnimation:annotationAnimation forKey:@"annotation"];
 
-        [annotationView.annotation setCoordinate:_coordinates[_count - 1]];
+                [annotationView.annotation setCoordinate:_coordinates[_count - 1]];
 
-        /* ShapeLayer animation. */
-        CAAnimation *shapeLayerAnimation = [self constructShapeLayerAnimation];
-        shapeLayerAnimation.delegate = self;
-        [self.shapeLayer addAnimation:shapeLayerAnimation forKey:@"shape"];
-    }
+                /* ShapeLayer animation. */
+                CAAnimation *shapeLayerAnimation = [self constructShapeLayerAnimation];
+                shapeLayerAnimation.delegate = self;
+                [self.shapeLayer addAnimation:shapeLayerAnimation forKey:@"shape"];
+            }
 
-    (void)(free(points)),           points  = NULL;
-    (void)(CGPathRelease(path)),    path    = NULL;
-}
+            (void)(free(points)),           points  = NULL;
+            (void)(CGPathRelease(path)),    path    = NULL;
+        }
 
 /* 构建annotationView的keyFrameAnimation. */
 - (CAAnimation *)constructAnnotationAnimationWithPath:(CGPathRef)path
